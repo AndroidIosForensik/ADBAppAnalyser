@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App-Analyse {{ device.model or device.serial }}</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1a1d21; --muted: #5b6470;
+    --line: #e3e6ea; --accent: #2f6fed; --code: #f0f2f5;
+    --p3-bg: #fbe9e9; --p3-fg: #b3261e; --p3-line:#e7a9a4;
+    --p2-bg: #fdf3e2; --p2-fg: #9a6400; --p2-line:#e8cf9a;
+    --p1-bg: #e9f1fb; --p1-fg: #1f5fce; --p1-line:#b9d2f2;
+    --p0-bg: #eef6ee; --p0-fg: #3c7d3c; --p0-line:#bcdcbc;
+    --good:#2f8f4e; --bad:#b3261e; --warn:#9a6400;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:#14171b; --card:#1c2027; --ink:#e8eaed; --muted:#9aa4b0;
+      --line:#2c323b; --accent:#5b8dff; --code:#232830;
+      --p3-bg:#3a1f1d; --p3-fg:#ff7a70; --p3-line:#6b332e;
+      --p2-bg:#332a17; --p2-fg:#e8b45e; --p2-line:#5c4a24;
+      --p1-bg:#1c2836; --p1-fg:#7fb0ff; --p1-line:#33465f;
+      --p0-bg:#1d2a1d; --p0-fg:#84c684; --p0-line:#33502f;
+      --good:#5fce7f; --bad:#ff7a70; --warn:#e8b45e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 19px; margin: 32px 0 12px; padding-top:8px; border-top:1px solid var(--line); }
+  h3 { font-size: 16px; margin: 0; }
+  a { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 13px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin:14px 0; }
+  .kv { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+  .kv .k { font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); }
+  .kv .v { font-weight:600; word-break:break-word; }
+  .counts { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
+  .pill { border-radius:999px; padding:6px 12px; font-weight:600; font-size:13px; border:1px solid transparent; }
+  .p3 { background:var(--p3-bg); color:var(--p3-fg); border-color:var(--p3-line); }
+  .p2 { background:var(--p2-bg); color:var(--p2-fg); border-color:var(--p2-line); }
+  .p1 { background:var(--p1-bg); color:var(--p1-fg); border-color:var(--p1-line); }
+  .p0 { background:var(--p0-bg); color:var(--p0-fg); border-color:var(--p0-line); }
+  .toolbar { position:sticky; top:0; background:var(--bg); padding:10px 0; z-index:5;
+    display:flex; flex-wrap:wrap; gap:8px; align-items:center; border-bottom:1px solid var(--line); }
+  input[type=search]{ flex:1; min-width:180px; padding:8px 10px; border:1px solid var(--line);
+    border-radius:8px; background:var(--card); color:var(--ink); }
+  .filter { font-size:13px; color:var(--muted); display:flex; gap:8px; flex-wrap:wrap; }
+  .filter label { cursor:pointer; user-select:none; }
+  .app { background:var(--card); border:1px solid var(--line); border-left-width:4px;
+    border-radius:10px; margin:10px 0; overflow:hidden; }
+  .app.p3 { border-left-color:var(--p3-fg); }
+  .app.p2 { border-left-color:var(--p2-fg); }
+  .app.p1 { border-left-color:var(--p1-fg); }
+  .app.p0 { border-left-color:var(--p0-line); }
+  .app > summary { list-style:none; cursor:pointer; padding:12px 14px; display:flex;
+    align-items:center; gap:10px; flex-wrap:wrap; }
+  .app > summary::-webkit-details-marker { display:none; }
+  .app .name { font-weight:700; }
+  .app .pkg { color:var(--muted); font-size:12.5px; font-family:ui-monospace,Consolas,monospace; }
+  .badge { font-size:11px; font-weight:700; padding:3px 8px; border-radius:6px; }
+  .scorechips { margin-left:auto; display:flex; gap:6px; font-size:11.5px; }
+  .chip { background:var(--code); border:1px solid var(--line); border-radius:6px; padding:2px 7px; color:var(--muted); }
+  .chip b { color:var(--ink); }
+  .body { padding: 4px 14px 14px; border-top:1px solid var(--line); }
+  .finding { padding:7px 0; border-bottom:1px dashed var(--line); }
+  .finding:last-child { border-bottom:none; }
+  .finding .w { display:inline-block; min-width:34px; font-weight:700; }
+  .finding .cat { font-size:10.5px; text-transform:uppercase; color:var(--muted); margin-left:6px; }
+  .finding .ev { display:block; font-size:12px; color:var(--muted); font-family:ui-monospace,Consolas,monospace;
+    word-break:break-word; margin-top:2px; }
+  .cat-herkunft .w{color:var(--warn);} .cat-chat .w{color:var(--accent);}
+  .cat-verschleierung .w{color:var(--bad);} .cat-aktivitaet .w{color:var(--muted);}
+  table.perm { width:100%; border-collapse:collapse; font-size:13px; margin-top:6px; }
+  table.perm td { padding:3px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .dang { color:var(--bad); font-weight:600; }
+  .granted-yes { color:var(--good); } .granted-no { color:var(--muted); }
+  code, .mono { font-family:ui-monospace,Consolas,monospace; background:var(--code);
+    padding:1px 5px; border-radius:5px; font-size:12.5px; word-break:break-all; }
+  .cmdrow { margin:8px 0; }
+  .cmdrow .cmt { font-size:12px; color:var(--muted); margin-bottom:2px; }
+  code.cmd { display:block; white-space:pre-wrap; padding:7px 9px; line-height:1.45;
+    border:1px solid var(--line); user-select:all; }
+  details.sec { margin:10px 0; }
+  details.sec > summary { cursor:pointer; font-weight:600; font-size:13.5px; color:var(--muted); }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .tag { background:var(--code); border:1px solid var(--line); border-radius:6px; padding:2px 8px; font-size:12px; }
+  .empty { color:var(--muted); font-style:italic; }
+  .note { background:var(--p2-bg); border:1px solid var(--p2-line); color:var(--p2-fg);
+    border-radius:8px; padding:10px 12px; margin:8px 0; font-size:13.5px; }
+  footer { margin-top:40px; color:var(--muted); font-size:12.5px; }
+  @media print { .toolbar{display:none;} .app{break-inside:avoid;} .app .body{display:block!important;} details{ } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>App-Analyse: versteckte oder selbst gebaute Chat-Apps</h1>
+  <div class="sub">
+    {{ device.manufacturer }} {{ device.model }} · Android {{ device.android_release }} (SDK {{ device.sdk }}) ·
+    Patch {{ device.security_patch }} · Seriennr. <span class="mono">{{ device.serial }}</span>
+  </div>
+  <div class="sub">Erstellt: {{ generated }} · Online-Abgleich:
+    {{ "an" if meta.online else "aus (offline)" }} · Geraetezeit: {{ device.device_time }}</div>
+
+  <div class="grid">
+    <div class="kv"><div class="k">Apps gesamt</div><div class="v">{{ apps|length }}</div></div>
+    <div class="kv"><div class="k">Profile</div><div class="v">{{ device.profiles|length }}</div></div>
+    <div class="kv"><div class="k">Fingerprint</div><div class="v" style="font-size:12px">{{ device.fingerprint }}</div></div>
+  </div>
+
+  <div class="counts">
+    <span class="pill p3">Unbedingt pruefen: {{ buckets[Priority.UNBEDINGT_PRUEFEN]|length }}</span>
+    <span class="pill p2">Pruefen empfohlen: {{ buckets[Priority.PRUEFEN_EMPFOHLEN]|length }}</span>
+    <span class="pill p1">Bekannte Messenger: {{ buckets[Priority.BEKANNTER_MESSENGER]|length }}</span>
+    <span class="pill p0">Unauffaellig: {{ buckets[Priority.UNAUFFAELLIG]|length }}</span>
+  </div>
+
+  <div class="sub" style="margin:8px 0 4px; max-width:820px">
+    Je App stehen rechts drei Punktwerte: <b>H</b> = Herkunft (woher die App
+    stammt – Store, seitlich geladen, Zertifikat), <b>Chat</b> = Chat-/Netzwerk&shy;funktion
+    (WebSocket, Server-Endpunkte, Push, Verschluesselung), <b>Verschl.</b> =
+    Verschleierung/Tarnung (harmloser Name, versteckt, obfuskiert).
+    Hoehere Werte bedeuten verdaechtiger; die Einstufung ergibt sich aus der
+    Kombination (Details je App unten).
+  </div>
+
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Suche nach Paket, Name, Beleg, Endpunkt …">
+    <div class="filter">
+      <label><input type="checkbox" class="pf" value="p3" checked> Unbedingt</label>
+      <label><input type="checkbox" class="pf" value="p2" checked> Empfohlen</label>
+      <label><input type="checkbox" class="pf" value="p1" checked> Messenger</label>
+      <label><input type="checkbox" class="pf" value="p0"> Unauffaellig</label>
+    </div>
+  </div>
+
+  {% macro prio_class(app) -%}
+    {%- if app.priority == Priority.UNBEDINGT_PRUEFEN -%}p3
+    {%- elif app.priority == Priority.PRUEFEN_EMPFOHLEN -%}p2
+    {%- elif app.priority == Priority.BEKANNTER_MESSENGER -%}p1
+    {%- else -%}p0{%- endif -%}
+  {%- endmacro %}
+
+  {% macro app_card(app) %}
+  {% set pc = prio_class(app) %}
+  <details class="app {{ pc }}" data-prio="{{ pc }}"
+    data-text="{{ (app.package ~ ' ' ~ app.display_name ~ ' ' ~ (app.findings|map(attribute='text')|join(' ')) ~ ' ' ~ (app.findings|map(attribute='evidence')|join(' ')) ~ ' ' ~ ((app.apk.endpoints if app.apk else [])|join(' ')))|e }}"
+    {% if pc in ['p3','p2'] %}open{% endif %}>
+    <summary>
+      <span class="badge {{ pc }}">{{ labels[app.priority] }}</span>
+      <span class="name">{{ app.display_name }}</span>
+      <span class="pkg">{{ app.package }}</span>
+      <span class="scorechips">
+        <span class="chip">H <b>{{ app.score_h() }}</b></span>
+        <span class="chip">Chat <b>{{ app.score_c() }}</b></span>
+        <span class="chip">Verschl. <b>{{ app.score_v() }}</b></span>
+      </span>
+    </summary>
+    <div class="body">
+      {% if app.findings %}
+      <div class="findings">
+        {% for f in app.findings %}
+        <div class="finding cat-{{ f.category.value }}">
+          <span class="w">{% if f.weight %}+{{ f.weight }}{% else %}·{% endif %}</span>
+          {{ f.text }}<span class="cat">{{ f.category.value }}</span>
+          {% if f.evidence %}<span class="ev">{{ f.evidence }}</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}<div class="empty">Keine auffaelligen Befunde.</div>{% endif %}
+
+      <div class="grid">
+        <div class="kv"><div class="k">Installer</div><div class="v">{{ app.installer or "null" }}</div></div>
+        <div class="kv"><div class="k">Paketquelle</div><div class="v">{{ app.package_source or "?" }}</div></div>
+        <div class="kv"><div class="k">Version</div><div class="v">{{ app.version_name }} ({{ app.version_code }})</div></div>
+        <div class="kv"><div class="k">Installiert</div><div class="v">{{ app.first_install or app.last_update or "?" }}</div></div>
+        <div class="kv"><div class="k">Benutzer</div><div class="v">{{ app.users|join(", ") }}</div></div>
+        <div class="kv"><div class="k">Play / F-Droid</div><div class="v">
+          {{ "ja" if app.reputation.in_play else ("nein" if app.reputation.in_play == false else "–") }} /
+          {{ "ja" if app.reputation.in_fdroid else ("nein" if app.reputation.in_fdroid == false else "–") }}</div></div>
+      </div>
+
+      {% if app.apk %}
+        {% set c = app.apk.certificates[0] if app.apk.certificates else none %}
+        {% if c %}
+        <details class="sec"><summary>Signaturzertifikat</summary>
+          <table class="perm">
+            <tr><td>Subject</td><td class="mono">{{ c.subject }}</td></tr>
+            <tr><td>Issuer</td><td class="mono">{{ c.issuer }}</td></tr>
+            <tr><td>SHA-256</td><td class="mono">{{ c.sha256 }}</td></tr>
+            <tr><td>Gueltig</td><td>{{ c.not_before }} – {{ c.not_after }} · Schema {{ c.scheme }}
+              {% if c.is_debug %}<span class="dang"> · DEBUG-Zertifikat</span>{% endif %}
+              {% if c.self_signed %} · selbstsigniert{% endif %}</td></tr>
+          </table>
+        </details>
+        {% endif %}
+        {% if app.apk.libraries or app.apk.protocol_signatures or app.apk.endpoints %}
+        <details class="sec"><summary>Code-Merkmale</summary>
+          {% if app.apk.libraries %}<div class="tags">{% for l in app.apk.libraries %}<span class="tag">{{ l }}</span>{% endfor %}</div>{% endif %}
+          {% if app.apk.protocol_signatures %}<div class="tags">{% for p in app.apk.protocol_signatures %}<span class="tag">{{ p }}</span>{% endfor %}</div>{% endif %}
+          {% if app.apk.fg_service_types %}<div class="sub" style="margin-top:6px">FG-Dienst-Typen: {{ app.apk.fg_service_types|join(", ") }}</div>{% endif %}
+          {% if app.apk.endpoints %}<div class="sub" style="margin-top:6px">Endpunkte:</div>
+            <div class="tags">{% for e in app.apk.endpoints %}<span class="tag mono">{{ e }}</span>{% endfor %}</div>{% endif %}
+          <div class="sub" style="margin-top:6px">
+            Code-Art: {{ app.apk.code_kind }}{% if app.apk.obfuscated %} · obfuskiert{% endif %}{% if app.apk.packer %} · Packer: {{ app.apk.packer }}{% endif %}{% if app.apk.pinning %} · Pinning{% endif %}</div>
+          {% if app.apk.sha256 %}<div class="sub" style="margin-top:6px">APK-SHA256: <span class="mono">{{ app.apk.sha256 }}</span></div>{% endif %}
+        </details>
+        {% endif %}
+      {% endif %}
+
+      {% if app.accessibility or app.notification_listener or app.device_admin or app.roles or app.appops %}
+      <details class="sec"><summary>Sonderzugriffe</summary>
+        <div class="tags">
+          {% if app.accessibility %}<span class="tag dang">Bedienungshilfe</span>{% endif %}
+          {% if app.notification_listener %}<span class="tag dang">Benachrichtigungszugriff</span>{% endif %}
+          {% if app.device_admin %}<span class="tag dang">Geraeteadmin</span>{% endif %}
+          {% for r in app.roles %}<span class="tag">Rolle: {{ r }}</span>{% endfor %}
+          {% for op, mode in app.appops.items() %}<span class="tag">{{ op }}: {{ mode }}</span>{% endfor %}
+        </div>
+      </details>
+      {% endif %}
+
+      {% if app.permissions %}
+      <details class="sec"><summary>Berechtigungen ({{ app.permissions|length }})</summary>
+        <table class="perm">
+          {% for p in app.permissions %}
+          {% set short = p.name.split('.')[-1] %}
+          {% set dangerous = short in ['RECORD_AUDIO','CAMERA','READ_SMS','RECEIVE_SMS','SEND_SMS','READ_CONTACTS','READ_CALL_LOG','ACCESS_FINE_LOCATION','ACCESS_BACKGROUND_LOCATION','READ_PHONE_STATE','SYSTEM_ALERT_WINDOW','REQUEST_INSTALL_PACKAGES','QUERY_ALL_PACKAGES'] %}
+          <tr>
+            <td class="{{ 'dang' if dangerous }}">{{ p.name }}</td>
+            <td>{% if p.granted == true %}<span class="granted-yes">gewaehrt</span>{% elif p.granted == false %}<span class="granted-no">nicht gewaehrt</span>{% else %}–{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </details>
+      {% endif %}
+
+      <details class="sec"><summary>Aktivitaet</summary>
+        <div class="grid">
+          <div class="kv"><div class="k">Datenverkehr</div><div class="v">↓{{ app.rx_bytes|bytes_h }} ↑{{ app.tx_bytes|bytes_h }}</div></div>
+          <div class="kv"><div class="k">Zuletzt genutzt</div><div class="v">{{ app.last_used or "–" }}</div></div>
+          <div class="kv"><div class="k">Benachrichtigungen</div><div class="v">{{ app.notification_count or 0 }}</div></div>
+          <div class="kv"><div class="k">Foreground-Dienst</div><div class="v">{{ "ja" if app.foreground_services else "nein" }}</div></div>
+        </div>
+      </details>
+
+      {% if not app.is_system and app.priority != Priority.UNAUFFAELLIG %}
+        {% set plan = secure_plan(app, device.serial) %}
+        <details class="sec" open>
+          <summary>Datensicherung — {{ plan.label }}{% if plan.root_required %} <span class="dang">(Root noetig)</span>{% endif %}</summary>
+          <div class="sub" style="margin:4px 0 6px">{{ plan.note }}</div>
+          {% for cmd, comment in plan.commands %}
+          <div class="cmdrow">
+            <div class="cmt"># {{ comment }}</div>
+            <code class="cmd">{{ cmd }}</code>
+          </div>
+          {% endfor %}
+        </details>
+      {% endif %}
+    </div>
+  </details>
+  {% endmacro %}
+
+  <h2 id="pruefliste">Pruefliste</h2>
+  {% if buckets[Priority.UNBEDINGT_PRUEFEN] or buckets[Priority.PRUEFEN_EMPFOHLEN] %}
+    {% for app in buckets[Priority.UNBEDINGT_PRUEFEN] %}{{ app_card(app) }}{% endfor %}
+    {% for app in buckets[Priority.PRUEFEN_EMPFOHLEN] %}{{ app_card(app) }}{% endfor %}
+  {% else %}
+    <div class="note">Keine App wurde als unbedingt oder empfohlen pruefbeduerftig eingestuft.</div>
+  {% endif %}
+
+  <h2 id="messenger">Bekannte Messenger</h2>
+  {% if buckets[Priority.BEKANNTER_MESSENGER] %}
+    {% for app in buckets[Priority.BEKANNTER_MESSENGER] %}{{ app_card(app) }}{% endfor %}
+  {% else %}<div class="empty">Keine bekannten Messenger gefunden.</div>{% endif %}
+
+  <h2 id="alle">Alle uebrigen Apps</h2>
+  {% for app in buckets[Priority.UNAUFFAELLIG] %}{{ app_card(app) }}{% endfor %}
+
+  <h2 id="methodik">Methodik &amp; Grenzen</h2>
+  <div class="sub" style="max-width:760px">
+    <p>Die Einstufung fasst Belege aus ADB (Herkunft, Berechtigungen, Sichtbarkeit,
+    Sonderzugriffe, Aktivitaet) und aus der statischen APK-Analyse (Manifest,
+    Signaturzertifikat, Code-Strings) zusammen und gleicht Paketnamen mit Google
+    Play, F-Droid und einer Stalkerware-Liste ab. Jeder Punkt nennt seinen Beleg.</p>
+    <p><b>Grenzen:</b> Ohne Root sind nur Metadaten und die APK lesbar, keine
+    App-Inhalte oder Nachrichten. Ein 404 bei Play kann auch „regional gesperrt“
+    oder „entfernt“ bedeuten; F-Droid kennt nur quelloffene Apps; „bei VirusTotal
+    unbekannt“ heisst nur „selten“. Heuristiken lassen sich umgehen (Packer,
+    Code-Nachladen). Der Bericht ist eine Vorauswahl, kein Beweis. Gesperrte
+    Profile (Privater Bereich, sicherer Ordner) sind ggf. nur eingeschraenkt
+    lesbar.</p>
+  </div>
+
+  <footer>
+    Erstellt mit appanalyse · rein lesende Sammlung · {{ generated }}
+  </footer>
+</div>
+<script>
+(function(){
+  var q = document.getElementById('q');
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.pf'));
+  var apps = Array.prototype.slice.call(document.querySelectorAll('.app'));
+  function active(){ var s={}; boxes.forEach(function(b){ s[b.value]=b.checked; }); return s; }
+  function apply(){
+    var term = (q.value||'').toLowerCase();
+    var s = active();
+    apps.forEach(function(a){
+      var okp = s[a.getAttribute('data-prio')];
+      var okt = !term || (a.getAttribute('data-text')||'').toLowerCase().indexOf(term) >= 0;
+      a.style.display = (okp && okt) ? '' : 'none';
+    });
+  }
+  q.addEventListener('input', apply);
+  boxes.forEach(function(b){ b.addEventListener('change', apply); });
+  apply();
+})();
+</script>
+</body>
+</html>

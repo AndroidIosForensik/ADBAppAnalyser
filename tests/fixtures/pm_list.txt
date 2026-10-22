@@ -1,0 +1,4 @@
+package:/system_ext/priv-app/Settings/Settings.apk=com.android.settings versionCode:37  installer=null uid:1000
+package:/data/app/~~hZG9nVU4j-fQkXAvVAxG7Q==/org.telegram.messenger.web-pQ9d-IKjs-B2qtr0vtsGHA==/base.apk=org.telegram.messenger.web versionCode:69139  installer=com.android.packageinstaller uid:10198
+package:/data/app/~~AbCdEf==/de.rechenhilfe.app-XyZ==/base.apk=de.rechenhilfe.app versionCode:1  installer=com.android.shell uid:10250
+package:/data/app/~~GhIjKl==/com.hidden.vault-MnO==/base.apk=com.hidden.vault versionCode:3  installer=null uid:10251

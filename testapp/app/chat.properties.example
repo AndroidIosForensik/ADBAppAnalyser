@@ -1,0 +1,15 @@
+# Vorlage fuer app/chat.properties (echte Datei ist in .gitignore).
+# Die Werte stammen aus der Ausgabe von relay/install.sh.
+# Zusaetzlich das Zertifikat nach app/src/main/res/raw/relay_cert.pem kopieren.
+
+# WebSocket-Adresse des Relays (feste IPv4). Fuer den Emulator: wss://10.0.2.2:8443
+serverUrl=wss://203.0.113.7:8443
+
+# SPKI-Pin (aus install.sh, Form: sha256/BASE64). Leer lassen = nur TrustManager.
+pin=sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+
+# Zugangstoken (aus install.sh).
+token=bitte-token-eintragen
+
+# Ziffern-Code, der im Rechner mit "=" den Chat oeffnet.
+unlockCode=737373

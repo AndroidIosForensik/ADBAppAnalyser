@@ -1,0 +1,23 @@
+# Installer-Pakete, die als vertrauenswuerdige App-Quelle gelten.
+# Apps aus diesen Quellen erhalten KEINE Herkunftspunkte fuer "seitlich installiert".
+vertrauenswuerdig:
+  - com.android.vending            # Google Play Store
+  - com.google.android.feed        # Google (selten)
+  - com.sec.android.app.samsungapps  # Samsung Galaxy Store
+  - com.huawei.appmarket           # Huawei AppGallery
+  - com.amazon.venezia             # Amazon Appstore
+  - com.xiaomi.mipicks             # Xiaomi GetApps
+  - com.heytap.market              # Oppo/Realme App Market
+  - com.vivo.appstore              # vivo App Store
+  - org.fdroid.fdroid              # F-Droid
+  - com.aurora.store               # Aurora Store (Play-Spiegel)
+  - app.grapheneos.apps            # GrapheneOS Apps
+  - org.fdroid.basic               # F-Droid Basic
+
+# Installer, die typischerweise Sideloading bedeuten (aus Datei / adb / Browser).
+# Diese fuehren zu Herkunftspunkten.
+sideload:
+  - com.android.packageinstaller     # manuelle APK-Installation
+  - com.google.android.packageinstaller
+  - com.android.shell                # adb install
+  - com.android.certinstaller

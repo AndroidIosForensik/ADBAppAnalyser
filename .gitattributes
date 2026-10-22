@@ -1,0 +1,13 @@
+# Shell-Skripte immer mit LF (install.sh laeuft auf dem Linux-Server)
+*.sh text eol=lf
+gradlew text eol=lf
+
+# Windows-Skripte mit CRLF
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binaerdateien nicht anfassen
+*.jar binary
+*.keystore binary
+*.png binary
+*.apk binary

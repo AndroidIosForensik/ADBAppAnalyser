@@ -1,0 +1,122 @@
+Activity Resolver Table:
+  Full MIME Types:
+      text/plain:
+        41f0d1e com.android.example/.Share
+
+Packages:
+  Package [com.android.settings] (7c9080):
+    appId=1000
+    codePath=/system_ext/priv-app/Settings
+    primaryCpuAbi=arm64-v8a
+    versionCode=37 minSdk=37 targetSdk=37
+    versionName=17
+    apkSigningVersion=3
+    flags=[ SYSTEM HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP ]
+    privateFlags=[ PRIVILEGED SYSTEM_EXT ]
+    lastUpdateTime=2026-05-29 11:10:47
+    installerPackageName=null
+    initiatingPackageName=null
+    packageSource=0
+    signatures=PackageSignatures{db5ad4 version:3, signatures:[cca16c8c], past signatures:[]}
+    declared permissions:
+      com.android.settings.BATTERY_DATA: prot=signature|privileged
+    install permissions:
+      android.permission.WRITE_SETTINGS: granted=true
+    User 0: ceDataInode=3003 installed=true hidden=false suspended=false stopped=false enabled=0 instant=false
+      firstInstallTime=2009-01-01 01:00:00
+      runtime permissions:
+  Package [org.telegram.messenger.web] (db642ac):
+    appId=10198
+    codePath=/data/app/~~hZG9nVU4j-fQkXAvVAxG7Q==/org.telegram.messenger.web-pQ9d-IKjs-B2qtr0vtsGHA==
+    primaryCpuAbi=arm64-v8a
+    versionCode=69139 minSdk=21 targetSdk=35
+    versionName=12.8.0
+    apkSigningVersion=2
+    flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP LARGE_HEAP ]
+    privateFlags=[ PRIVATE_FLAG_REQUEST_LEGACY_EXTERNAL_STORAGE HAS_DOMAIN_URLS ]
+    lastUpdateTime=2026-06-09 14:04:19
+    installerPackageName=com.android.packageinstaller
+    initiatingPackageName=com.android.packageinstaller
+    packageSource=3
+    signatures=PackageSignatures{90e70a version:2, signatures:[9744bfe6], past signatures:[]}
+    declared permissions:
+      org.telegram.messenger.web.permission.MAPS_RECEIVE: prot=signature
+    install permissions:
+      android.permission.FOREGROUND_SERVICE: granted=true
+      com.google.android.c2dm.permission.RECEIVE: granted=true
+    User 0: ceDataInode=12756 installed=true hidden=false suspended=false stopped=false enabled=0 instant=false
+      firstInstallTime=2026-06-02 10:24:13
+      runtime permissions:
+        android.permission.POST_NOTIFICATIONS: granted=true, flags=[ USER_SET|USER_SENSITIVE_WHEN_GRANTED]
+        android.permission.INTERNET: granted=true, flags=[ USER_SET]
+        android.permission.CAMERA: granted=true, flags=[ USER_SET]
+        android.permission.RECORD_AUDIO: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED]
+  Package [de.rechenhilfe.app] (aa11bb22):
+    appId=10250
+    codePath=/data/app/~~AbCdEf==/de.rechenhilfe.app-XyZ==
+    primaryCpuAbi=arm64-v8a
+    versionCode=1 minSdk=26 targetSdk=36
+    versionName=1.0
+    apkSigningVersion=2
+    flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]
+    privateFlags=[ ]
+    lastUpdateTime=2026-09-20 22:10:05
+    installerPackageName=com.android.shell
+    initiatingPackageName=null
+    packageSource=3
+    signatures=PackageSignatures{ff00aa version:2, signatures:[deadbeef], past signatures:[]}
+    install permissions:
+      android.permission.FOREGROUND_SERVICE: granted=true
+      android.permission.RECEIVE_BOOT_COMPLETED: granted=true
+    User 0: ceDataInode=99001 installed=true hidden=false suspended=false stopped=false enabled=0 instant=false
+      firstInstallTime=2026-09-20 22:10:05
+      runtime permissions:
+        android.permission.POST_NOTIFICATIONS: granted=true, flags=[ USER_SET]
+        android.permission.INTERNET: granted=true, flags=[ USER_SET]
+  Package [com.hidden.vault] (cc33dd44):
+    appId=10251
+    codePath=/data/app/~~GhIjKl==/com.hidden.vault-MnO==
+    primaryCpuAbi=arm64-v8a
+    versionCode=3 minSdk=26 targetSdk=34
+    versionName=0.3
+    apkSigningVersion=2
+    flags=[ HAS_CODE ]
+    privateFlags=[ ]
+    lastUpdateTime=2026-09-15 08:00:00
+    installerPackageName=null
+    initiatingPackageName=null
+    packageSource=3
+    signatures=PackageSignatures{ab12cd version:2, signatures:[cafe1234], past signatures:[]}
+    install permissions:
+      android.permission.INTERNET: granted=true
+    User 0: ceDataInode=99010 installed=true hidden=false suspended=false stopped=false enabled=2 instant=false
+      firstInstallTime=2026-09-15 08:00:00
+      disabledComponents:
+        com.hidden.vault/.LauncherActivity
+      runtime permissions:
+        android.permission.INTERNET: granted=true, flags=[ USER_SET]
+  Package [com.work.chatclient] (ee55ff66):
+    appId=10252
+    codePath=/data/app/~~PqRsTu==/com.work.chatclient-VwX==
+    primaryCpuAbi=arm64-v8a
+    versionCode=5 minSdk=26 targetSdk=35
+    versionName=2.1
+    apkSigningVersion=2
+    flags=[ HAS_CODE ]
+    privateFlags=[ ]
+    lastUpdateTime=2026-08-01 12:00:00
+    installerPackageName=null
+    initiatingPackageName=null
+    packageSource=3
+    signatures=PackageSignatures{99aa88 version:2, signatures:[0badf00d], past signatures:[]}
+    install permissions:
+      android.permission.INTERNET: granted=true
+    User 0: ceDataInode=0 installed=false hidden=false suspended=false stopped=true enabled=0 instant=false
+    User 10: ceDataInode=77001 installed=true hidden=false suspended=false stopped=false enabled=0 instant=false
+      firstInstallTime=2026-08-01 12:00:00
+      runtime permissions:
+        android.permission.INTERNET: granted=true, flags=[ USER_SET]
+
+Shared users:
+  SharedUser [android.uid.system] (abc):
+    userId=1000

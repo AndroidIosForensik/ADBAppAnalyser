@@ -1,0 +1,53 @@
+# Bekannte, legitime Messenger/Chat-Apps. Treffer werden als "Bekannter
+# Messenger" eingestuft. Ist eine solche App AUSSERHALB eines Stores installiert,
+# ergaenzt der Bericht den Hinweis "Echtheit pruefen" (moegliche Faelschung/Mod).
+messenger:
+  - org.telegram.messenger
+  - org.telegram.messenger.web
+  - org.thoughtcrime.securesms      # Signal
+  - com.whatsapp
+  - com.whatsapp.w4b                 # WhatsApp Business
+  - org.thunderdog.challegram        # Telegram X
+  - com.facebook.orca                # Messenger
+  - com.facebook.mlite
+  - com.instagram.android
+  - com.snapchat.android
+  - com.discord
+  - com.viber.voip
+  - jp.naver.line.android            # LINE
+  - com.tencent.mm                   # WeChat
+  - com.tencent.mobileqq
+  - kik.android
+  - com.kakao.talk
+  - com.google.android.apps.messaging  # Google Messages
+  - com.android.messaging
+  - com.samsung.android.messaging
+  - im.vector.app                    # Element (Matrix)
+  - chat.rocket.android
+  - com.wire                         # Wire
+  - org.session.messenger            # Session
+  - com.bbm
+  - ch.threema.app                   # Threema
+  - ch.threema.app.work
+  - com.skype.raider
+  - com.zhiliaoapp.musically          # TikTok (DM)
+  - com.groupme.android
+  - com.microsoft.teams
+  - us.zoom.videomeetings
+  - com.slack
+
+# Bekannte modifizierte Messenger-Klone (inoffizielle "Mods"). Immer verdaechtig,
+# da sie offizielle Apps nachbilden und oft Daten abgreifen.
+mods:
+  - com.gbwhatsapp                   # GBWhatsApp
+  - com.fmwhatsapp                   # FMWhatsApp
+  - com.yowhatsapp                   # YoWhatsApp
+  - com.whatsapp.plus                # WhatsApp Plus
+  - com.obwhatsapp
+  - com.aero                         # Aero WhatsApp
+  - com.gbwhatsapp3
+  - org.telegram.plus                # Plus Messenger
+  - org.telegram.mdgram
+  - org.telegram.biftogram
+  - com.exteragram.messenger         # exteraGram
+  - org.telegram.nekox               # NekoX
