@@ -1,0 +1,30 @@
+ADB APP ANALYSE - Windows-Release
+=================================
+
+Findet per ADB versteckte oder selbst gebaute Chat-Apps auf einem Android-Geraet
+und erstellt eine priorisierte Pruefliste mit Belegen. Rein lesend.
+
+SCHNELLSTART
+  1. Android Platform Tools installieren (adb muss im PATH sein):
+     https://developer.android.com/tools/releases/platform-tools
+  2. Am Geraet: Entwickleroptionen -> USB-Debugging aktivieren, Kabel anschliessen,
+     RSA-Dialog am Geraet bestaetigen.
+  3. "Scan starten.cmd" doppelklicken und den Fragen folgen.
+
+ODER direkt auf der Kommandozeile:
+  appanalyse.exe devices
+  appanalyse.exe scan -s <Seriennummer>
+  appanalyse.exe scan --offline
+  appanalyse.exe apk <datei.apk>
+  appanalyse.exe update-lists        (Stalkerware-Liste laden/aktualisieren)
+
+ERGEBNIS
+  ausgabe\<Zeitstempel>_<Seriennummer>\bericht.html  (im Browser oeffnen)
+  plus CSV/JSON und die unveraenderten ADB-Rohdaten (Beweiskette).
+
+HINWEISE
+  - adb selbst ist NICHT enthalten (Android Platform Tools separat installieren).
+  - Windows SmartScreen kann bei unsignierten Exen warnen -> "Weitere Infos" ->
+    "Trotzdem ausfuehren".
+  - Quellcode, Schulungsunterlage und Lizenz (MIT):
+    https://github.com/AndroidIosForensik/ADBAppAnalyser

@@ -45,3 +45,6 @@ Thumbs.db
 
 # Verteilungsarchive
 *.zip
+
+# PyInstaller
+*.spec
