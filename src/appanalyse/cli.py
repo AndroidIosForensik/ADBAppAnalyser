@@ -289,7 +289,6 @@ def _write_liesmich(out_dir: Path) -> None:
         "ergebnis.json: vollstaendiges Ergebnis maschinenlesbar.\n"
         "apks/: gesicherte APKs der Pruefliste (Beweismittel).\n\n"
         "Rein lesende Sammlung: kein Root, keine Grants, keine Aenderungen am Geraet.\n"
-        "Ohne Root nur Metadaten und APK lesbar, keine App-Inhalte/Nachrichten.\n"
     )
     (out_dir / "LIESMICH.txt").write_text(text, encoding="utf-8")
 
