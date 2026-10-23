@@ -16,7 +16,6 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
-    "websockets>=12.0",
 ]
 
 [project.scripts]

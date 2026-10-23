@@ -14,26 +14,12 @@ ausgabe*/
 # Reputationscache
 .cache/
 
-# Android / Gradle
-testapp/.gradle/
-testapp/build/
-testapp/app/build/
-testapp/local.properties
-testapp/.idea/
-testapp/*.keystore
-testapp/*.jks
-
-# App-Konfiguration mit Server-Zugangsdaten (nur Vorlage wird versioniert)
-testapp/app/chat.properties
-testapp/keystore.properties
-# Hinweis: res/raw/relay_cert.pem (nur oeffentliches Zertifikat, kein Geheimnis)
-# wird als Platzhalter mitgeliefert, damit der Build sofort funktioniert, und von
-# der Ausgabe aus relay/install.sh ueberschrieben. Der private Schluessel bleibt
-# ausschliesslich auf dem Server.
-
-# Relay-Server-Geheimnisse
-relay/*.pem
-relay/token.txt
+# Nicht Teil des Tools: lokaler Pruefstand und Schulungsmaterial (bleiben lokal,
+# gehoeren aber nicht ins Repo)
+/relay/
+/testapp/
+/SCHULUNG.md
+tests/test_relay.py
 
 # Betriebssystem
 Thumbs.db

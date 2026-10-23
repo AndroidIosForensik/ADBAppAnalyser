@@ -11,14 +11,21 @@ keine Änderung von Geräteeinstellungen.
 
 ## Bestandteile
 
-| Ordner     | Inhalt |
-|------------|--------|
+| Pfad | Inhalt |
+|------|--------|
 | `src/appanalyse/` | Das Analyse-Tool (Python-CLI `appanalyse`). |
-| `relay/`   | Kleiner TLS-WebSocket-Relay-Server + PC-Client für die Test-Umgebung. |
-| `testapp/` | Getarnte Test-Chat-App „Rechner“ (Kotlin/Compose), die das Tool findet. |
-| `tests/`   | Automatische Tests (Parser, APK, Bewertung, Abgleich, Relay-E2E). |
+| `AppAnalyse starten.cmd` / `… offline starten.cmd` | Geführter Ablauf für Windows (fragt Gerät + Online/Offline, öffnet den Bericht). |
+| `packaging/` | Build der eigenständigen `appanalyse.exe` (PyInstaller) + Release-Starter. |
+| `tests/` | Automatische Tests (Parser, APK, Bewertung, Abgleich). |
 
-## Analyse-Tool `appanalyse`
+## Windows-Release (ohne Python)
+
+Fertige `appanalyse.exe` unter
+**[Releases](https://github.com/AndroidIosForensik/ADBAppAnalyser/releases)** —
+herunterladen, entpacken, `Scan starten.cmd` ausführen. Es werden nur die
+**Android Platform Tools (`adb`)** zusätzlich benötigt (nicht enthalten).
+
+## Analyse-Tool `appanalyse` (aus dem Quellcode)
 
 ### Installation
 
@@ -73,26 +80,6 @@ IOC-Treffer sind immer „Unbedingt prüfen“.
 - `ergebnis.json` – vollständiges Ergebnis maschinenlesbar.
 - `rohdaten/` + `befehle.json` – unveränderte ADB-Ausgaben und exakte Aufrufe.
 - `apks/` – gesicherte APKs der Prüfliste (Beweismittel für z. B. jadx).
-
-## Test-Umgebung
-
-Um die Erkennung realistisch zu prüfen, gibt es eine getarnte Chat-App und einen
-Relay-Server. Zwei Geräte unterhalten sich über den eigenen Server; das Tool soll
-die App als „Unbedingt prüfen“ erkennen. Details:
-
-- **Server:** siehe [`relay/README.md`](relay/README.md) – `install.sh` richtet den
-  gehärteten systemd-Dienst mit selbstsigniertem Zertifikat und Token ein.
-- **App:** siehe [`testapp/`](testapp/) – `build.cmd` baut Debug- und
-  R8-obfuskierte Release-Variante. Die App zeigt einen echten Taschenrechner; ein
-  Ziffern-Code + „=“ öffnet den versteckten Chat.
-
-Kurzablauf:
-
-1. `relay/` auf den Server kopieren, `sudo ./install.sh --ip <IPv4>` ausführen.
-2. Die ausgegebenen Werte in `testapp/app/chat.properties` eintragen und das
-   Zertifikat nach `testapp/app/src/main/res/raw/relay_cert.pem` kopieren.
-3. `cd testapp && build.cmd`, die APK auf zwei Geräte installieren, chatten.
-4. `appanalyse scan` auf beiden Geräten – die App erscheint unter „Unbedingt prüfen“.
 
 ## Tests
 
