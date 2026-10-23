@@ -89,7 +89,6 @@ IOC-Treffer sind immer „Unbedingt prüfen“.
 
 ## Grenzen
 
-- Ohne Root nur Metadaten und APK lesbar, **keine App-Inhalte oder Nachrichten**.
 - Play-404 kann „regional gesperrt/entfernt“ bedeuten; F-Droid kennt nur FOSS;
   „bei VirusTotal unbekannt“ heißt nur „selten“.
 - Heuristiken lassen sich umgehen (Packer, Code-Nachladen). Der Bericht ist eine
@@ -97,4 +96,4 @@ IOC-Treffer sind immer „Unbedingt prüfen“.
 - Beim Online-Abgleich gehen Paketnamen an Google und F-Droid; für sensible Fälle
   `--offline` verwenden.
 - Es gibt keine öffentliche „Datenbank aller Apps“; der Abgleich kombiniert
-  mehrere Quellen. (AndroZoo wäre eine Erweiterung, braucht aber Forschungszugang.)
+  mehrere Quellen.
