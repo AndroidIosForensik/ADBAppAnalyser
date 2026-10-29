@@ -16,6 +16,7 @@ class Priority(str, Enum):
     """Einstufung einer App fuer die Pruefliste (aufsteigender Ernst)."""
 
     UNAUFFAELLIG = "unauffaellig"
+    NICHT_BEURTEILBAR = "nicht_beurteilbar"
     BEKANNTER_MESSENGER = "bekannter_messenger"
     PRUEFEN_EMPFOHLEN = "pruefen_empfohlen"
     UNBEDINGT_PRUEFEN = "unbedingt_pruefen"
@@ -27,6 +28,7 @@ PRIORITY_RANK = {
     Priority.PRUEFEN_EMPFOHLEN: 2,
     Priority.BEKANNTER_MESSENGER: 1,
     Priority.UNAUFFAELLIG: 0,
+    Priority.NICHT_BEURTEILBAR: 1,
 }
 
 PRIORITY_LABEL = {
@@ -34,6 +36,7 @@ PRIORITY_LABEL = {
     Priority.PRUEFEN_EMPFOHLEN: "Pruefen empfohlen",
     Priority.BEKANNTER_MESSENGER: "Bekannter Messenger",
     Priority.UNAUFFAELLIG: "Unauffaellig",
+    Priority.NICHT_BEURTEILBAR: "Nicht abschliessend beurteilbar",
 }
 
 
@@ -231,7 +234,7 @@ class AppInfo:
     package_source: str = ""
     install_reason: str = ""  # 0 unbekannt, 1 Richtlinie, 2 Wiederherstellung, 3 Einrichtung, 4 Nutzer
     signature_hash: str = ""  # Kurzwert aus dumpsys, je Zertifikat gleich
-    oem_signed: bool = False  # gleiche Signatur wie eine System-App (Hersteller-Vorinstallation)
+    oem_signed: bool = False  # Legacy-Feld; Kurzhashes belegen keine Herstellersignatur.
 
     is_system: bool = False
     is_updated_system: bool = False

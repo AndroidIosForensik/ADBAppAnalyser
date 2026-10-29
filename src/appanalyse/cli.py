@@ -31,7 +31,7 @@ def main(argv: list[str] | None = None) -> int:
     sc.add_argument("--offline", action="store_true", help="Keine Online-Abfragen")
     sc.add_argument("--no-apk", action="store_true", help="Keine APKs sichern/analysieren")
     sc.add_argument("--all-apks", action="store_true", help="Auch alle System-Apps sichern")
-    sc.add_argument("--keep-all-apks", action="store_true", help="Alle gesicherten APKs behalten")
+    sc.add_argument("--keep-all-apks", action="store_true", help="Kompatibilitaet: gesicherte APKs werden immer behalten")
     sc.add_argument("--vt-key", default=os.environ.get("VT_API_KEY", ""), help="VirusTotal-API-Key")
 
     ap = sub.add_parser("apk", help="Eine einzelne APK offline analysieren")
@@ -149,8 +149,6 @@ def _cmd_scan(args) -> int:
             report_path = html.write_all(out_dir, device, apps, meta)
         except Exception as exc:
             console.print(f"[red]Bericht konnte nicht geschrieben werden:[/] {exc}")
-        if not args.keep_all_apks:
-            _prune_apks(out_dir / "apks", apps)
 
     exit_code = recorder.finalize()
     if fatal:
@@ -188,7 +186,7 @@ def _cmd_apk(args) -> int:
     console.print(
         f"\nPunkte — Herkunft {app.score_h()}, Chat {app.score_c()}, Verschleierung {app.score_v()}"
     )
-    return 0
+    return 2 if apk.error else 0
 
 
 def _cmd_update_lists() -> int:
@@ -220,7 +218,7 @@ def _cmd_update_lists() -> int:
 def _print_summary(console, apps, report_path: Path) -> None:
     from rich.table import Table
 
-    order = [Priority.UNBEDINGT_PRUEFEN, Priority.PRUEFEN_EMPFOHLEN]
+    order = [Priority.UNBEDINGT_PRUEFEN, Priority.PRUEFEN_EMPFOHLEN, Priority.NICHT_BEURTEILBAR]
     table = Table(title="Pruefliste")
     table.add_column("Prioritaet")
     table.add_column("App")
@@ -261,23 +259,6 @@ def _print_summary(console, apps, report_path: Path) -> None:
     console.print(f"[bold]Bericht:[/] {report_path}")
 
 
-def _prune_apks(apk_dir: Path, apps) -> None:
-    """Behaelt nur die APKs der Pruefliste als Beweismittel; loescht die uebrigen."""
-    if not apk_dir.exists():
-        return
-    keep = {
-        a.package
-        for a in apps
-        if a.priority in (Priority.UNBEDINGT_PRUEFEN, Priority.PRUEFEN_EMPFOHLEN)
-    }
-    for f in apk_dir.glob("*.apk"):
-        if f.stem not in keep:
-            try:
-                f.unlink()
-            except OSError:
-                pass
-
-
 def _write_liesmich(out_dir: Path) -> None:
     text = (
         "APP-ANALYSE\n\n"
@@ -287,7 +268,7 @@ def _write_liesmich(out_dir: Path) -> None:
         "rohdaten/: unveraenderte stdout/stderr aller ADB-Aufrufe.\n"
         "befehle.json: exakte ADB-Argumente, Zeiten, Exitcodes.\n"
         "ergebnis.json: vollstaendiges Ergebnis maschinenlesbar.\n"
-        "apks/: gesicherte APKs der Pruefliste (Beweismittel).\n\n"
+        "apks/: alle gesicherten APKs (unabhaengig von der Einstufung).\n\n"
         "Rein lesende Sammlung: kein Root, keine Grants, keine Aenderungen am Geraet.\n"
     )
     (out_dir / "LIESMICH.txt").write_text(text, encoding="utf-8")

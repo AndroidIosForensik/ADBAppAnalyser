@@ -50,15 +50,16 @@ Wichtige Schalter für `scan`:
 
 - `--offline` – keinerlei Online-Abfragen (für sensible Ermittlungen).
 - `--no-apk` – keine APKs sichern/analysieren (nur ADB-Metadaten).
-- `--all-apks` / `--keep-all-apks` – auch System-Apps sichern bzw. alle behalten.
+- `--all-apks` – auch System-Apps sichern.
+- Alle gesicherten APKs bleiben erhalten. `--keep-all-apks` wird aus Kompatibilitätsgründen weiter akzeptiert.
 - `--vt-key <KEY>` – VirusTotal-Abgleich (nur Hashes, nur für Kandidaten).
 
 ### Was das Tool auswertet
 
 - **Herkunft:** Installer, `packageSource`, Store-Abgleich (Play/F-Droid),
   Signaturzertifikat (Debug-/selbstsigniert), Paketname.
-- **Chat-Funktion:** Echtzeit-/Chat-Bibliotheken (OkHttp-WS, MQTT, XMPP, Socket.IO,
-  Firebase, Matrix, libsignal …), **obfuskierungsfeste Protokoll-Signaturen**
+- **Hinweise auf Nachrichten-/Netzwerkfunktionen:** Bibliotheken (OkHttp-WS, MQTT, XMPP, Socket.IO,
+  Firebase, Matrix, libsignal …), Protokollmerkmale
   (z. B. die WebSocket-GUID), Foreground-Dienst `remoteMessaging`, Server-Endpunkte,
   Chat-Begriffe, Zertifikats-Pinning.
 - **Verschleierung:** Tarnname (Rechner, Notizen …), deaktivierter/fehlender
@@ -68,8 +69,15 @@ Wichtige Schalter für `scan`:
 
 Jede App wird eingestuft als **Unbedingt prüfen**, **Prüfen empfohlen**,
 **Bekannter Messenger** (bei Sideload mit Hinweis „Echtheit prüfen“) oder
-**Unauffällig**. Bekannte modifizierte Klone (z. B. GBWhatsApp) und
+**Unauffällig**. Ohne APK-Analyse oder bei Analysefehlern lautet das Ergebnis
+ohne stärkere Befunde **Nicht abschließend beurteilbar**. Vorhandene Prüfbefunde
+bleiben auch bei Teilfehlern sichtbar. Bekannte modifizierte Klone (z. B. GBWhatsApp) und
 IOC-Treffer sind immer „Unbedingt prüfen“.
+
+Installer, Systemstatus und Signatur-Kurzwerte unterdrücken keine Prüfung
+zusätzlicher Funktionen. Ein Rechnername zusammen mit Internetzugriff allein
+ergibt keine Tarnungspunkte. Statische Treffer sind Hinweise für die Prüfung;
+der tatsächliche Chat muss anhand des Aufrufpfads, Daten oder eines Tests belegt werden.
 
 ### Ausgabe
 
@@ -79,7 +87,7 @@ IOC-Treffer sind immer „Unbedingt prüfen“.
 - `pruefliste.csv`, `befunde.csv`, `berechtigungen.csv`, `tabellen/apps.csv`.
 - `ergebnis.json` – vollständiges Ergebnis maschinenlesbar.
 - `rohdaten/` + `befehle.json` – unveränderte ADB-Ausgaben und exakte Aufrufe.
-- `apks/` – gesicherte APKs der Prüfliste (Beweismittel für z. B. jadx).
+- `apks/` – alle gesicherten APKs, unabhängig von der Bewertung (z. B. für jadx).
 
 ## Tests
 

@@ -76,31 +76,30 @@ def score_app(app: AppInfo, datasets: Datasets | None = None, context: bool = Tr
 
     is_messenger = app.package in ds.messengers
     is_mod = app.package in ds.mods
-    # Vertrauenswuerdige Herkunft = System-App ODER aus einem bekannten Store/Repo
-    # (Play, F-Droid, GrapheneOS Apps, Aurora ...). Fuer solche Apps sind die
-    # Herkunfts-, Tarn- und Sonderzugriffs-Heuristiken NICHT gedacht (sie zielen
-    # auf seitlich geladene/selbst gebaute Apps) und wuerden nur Fehlalarme
-    # erzeugen. Ihre Chat-/Aktivitaetsmerkmale werden weiter erfasst, treiben aber
-    # ohne unsichere Herkunft nicht die Prioritaet.
-    # Hersteller-Signatur (gleich einer System-App) gilt ebenfalls als vertrauens-
-    # wuerdig: Xiaomi/Oppo/Samsung spielen so viele Apps mit installer=null vor.
+    # Ein bekannter Installer ist Kontext, keine Zusicherung ueber die Funktion.
+    # Insbesondere duerfen kurze dumpsys-Signaturwerte keine Entwarnung ausloesen.
     installer = app.installer or app.initiating_installer
     trusted_origin = context and (
-        app.is_system or installer in ds.trusted_installers or app.oem_signed
+        app.is_system or installer in ds.trusted_installers
     )
-    if context and app.oem_signed and not app.is_system:
+    if context and app.signature_hash:
         findings.append(
             Finding(
                 Category.HINWEIS, 0,
-                "Vom Hersteller signiert (gleiche Signatur wie System-Apps) - Vorinstallation.",
+                "Signatur-Kurzwert aus dumpsys; kein kryptografischer Identitaetsnachweis.",
                 f"Signatur-Kurzwert {app.signature_hash}",
             )
         )
 
     _score_origin(app, ds, findings, context, trusted_origin)
     _score_chat(app, findings)
-    if not trusted_origin:
-        _score_camouflage(app, ds, findings, is_messenger, context)
+    _score_camouflage(app, ds, findings, is_messenger, context)
+    if app.apk and app.apk.error:
+        findings.append(Finding(Category.HINWEIS, 0,
+                                "APK-Analyse unvollstaendig; keine Entwarnung moeglich.", app.apk.error))
+    elif app.apk is None:
+        findings.append(Finding(Category.HINWEIS, 0,
+                                "Keine APK-Analyse vorhanden; Funktion nicht abschliessend beurteilbar.", "APK nicht untersucht"))
     if context:
         _score_activity(app, findings)
 
@@ -119,9 +118,6 @@ def score_app(app: AppInfo, datasets: Datasets | None = None, context: bool = Tr
 
 
 def _score_origin(app: AppInfo, ds: Datasets, findings: list[Finding], context: bool = True, trusted_origin: bool = False) -> None:
-    if app.is_system or trusted_origin:
-        return  # System-/Store-Apps erhalten keine Herkunftspunkte.
-
     inst, init = app.installer, app.initiating_installer
     preload = _preload_like(app)
     ev = (
@@ -130,6 +126,8 @@ def _score_origin(app: AppInfo, ds: Datasets, findings: list[Finding], context: 
     )
     if not context:
         pass  # Ohne Geraetekontext keine Installer-/Store-Bewertung.
+    elif trusted_origin:
+        pass  # Bekannter Installer/Systemstatus: kein Herkunftsverdacht daraus.
     elif "com.android.shell" in (inst, init):
         findings.append(Finding(Category.HERKUNFT, W_INSTALLER_SIDELOAD,
                                 "Per adb vom PC installiert (kein App-Store).", ev))
@@ -137,11 +135,8 @@ def _score_origin(app: AppInfo, ds: Datasets, findings: list[Finding], context: 
         findings.append(Finding(Category.HERKUNFT, W_INSTALLER_SIDELOAD,
                                 "Aus einer APK-Datei installiert (Paketinstaller), nicht aus einem Store.", ev))
     elif preload:
-        # Android 11+ protokolliert den Ausloeser jeder Installation. Fehlen
-        # Installer UND Ausloeser, hat das System die App selbst eingespielt -
-        # typisch fuer Hersteller-/Partner-Vorinstallationen (Xiaomi, Oppo, Samsung).
         findings.append(Finding(Category.HERKUNFT, W_PRELOAD_HINT,
-                                "Kein Installer und kein Ausloeser - typisch fuer eine Hersteller-/Partner-Vorinstallation.", ev))
+                                "Installer und Ausloeser unbekannt; Vorinstallation nicht nachgewiesen.", ev))
     elif not inst and not init:
         findings.append(Finding(Category.HERKUNFT, W_INSTALLER_UNKNOWN,
                                 "Kein Installer hinterlegt (aeltere Android-Version: Vorinstallation und Sideload nicht unterscheidbar).", ev))
@@ -156,7 +151,7 @@ def _score_origin(app: AppInfo, ds: Datasets, findings: list[Finding], context: 
     if rep.in_play is False and preload:
         # Hersteller-Apps stehen oft nicht im Play Store - nur als Info, ohne Punkte.
         findings.append(Finding(Category.HINWEIS, 0,
-                                "Nicht im Play Store (bei Vorinstallationen ueblich).", "Play: 404"))
+                                "Nicht im Play Store gefunden; Herkunft bleibt unbekannt.", "Play: 404"))
     elif rep.in_play is False:
         findings.append(
             Finding(Category.HERKUNFT, W_NOT_IN_PLAY, "Nicht im Google Play Store gefunden.", "Play: 404")
@@ -174,7 +169,7 @@ def _score_origin(app: AppInfo, ds: Datasets, findings: list[Finding], context: 
         for cert in apk.certificates:
             if cert.is_debug:
                 findings.append(
-                    Finding(Category.HERKUNFT, W_DEBUG_CERT, "Mit Android-Debug-Zertifikat signiert.", f"Zertifikat-Subject: {cert.subject}")
+                    Finding(Category.HERKUNFT, W_DEBUG_CERT, "Zertifikatsname enthaelt Android Debug (Hinweis, kein Identitaetsnachweis).", f"Zertifikat-Subject: {cert.subject}")
                 )
                 break
         else:
@@ -224,12 +219,12 @@ def _score_chat(app: AppInfo, findings: list[Finding]) -> None:
     elif apk.protocol_signatures:
         sig = apk.protocol_signatures[0]
         findings.append(
-            Finding(Category.CHAT, W_REALTIME_LIB, f"Chat-Protokoll-Signatur erkannt ({sig}).", f"Code: {apk.protocol_evidence.get(sig, sig)}")
+            Finding(Category.CHAT, W_REALTIME_LIB, f"Netzwerk-Protokollmerkmal erkannt ({sig}); kein Chatnachweis.", f"Code: {apk.protocol_evidence.get(sig, sig)}")
         )
 
     if "remoteMessaging" in apk.fg_service_types:
         findings.append(
-            Finding(Category.CHAT, W_FG_REMOTE_MSG, "Foreground-Dienst vom Typ remoteMessaging (dauerhafte Nachrichtenverbindung).", "manifest: foregroundServiceType=remoteMessaging")
+            Finding(Category.CHAT, W_FG_REMOTE_MSG, "Foreground-Dienst vom Typ remoteMessaging deklariert; Nutzung nicht nachgewiesen.", "manifest: foregroundServiceType=remoteMessaging")
         )
 
     if apk.endpoints:
@@ -271,9 +266,9 @@ def _score_camouflage(app: AppInfo, ds: Datasets, findings: list[Finding], is_me
 
     label = app.display_name
     camo = match_camouflage(label)
-    if camo and (_has_chat(app) or _has_network(app)) and not is_messenger:
+    if camo and _has_chat(app) and not is_messenger:
         findings.append(
-            Finding(Category.VERSCHLEIERUNG, W_CAMOUFLAGE, f"Harmlos wirkender Name '{label}' trotz Chat-/Netzwerkfunktion.", f"Tarnbegriff: {camo}")
+            Finding(Category.VERSCHLEIERUNG, W_CAMOUFLAGE, f"Name '{label}' zusammen mit mehreren Nachrichtenhinweisen: Zusatzfunktion pruefen.", f"Namensmerkmal: {camo}")
         )
 
     # Kein Launcher ist bei Vorinstallationen (Hintergrund-Helfer) und bei vom
@@ -366,24 +361,25 @@ def _priority(app: AppInfo, ds: Datasets, findings: list[Finding], is_messenger:
 
     # 2) Bekannte Messenger: eigene Einstufung (vor den Schwellen), da Chatfunktion
     #    bei ihnen erwartbar ist. Ausserhalb eines Stores -> Echtheit pruefen.
-    if is_messenger:
+    if is_messenger and app.apk and not app.apk.error:
         if _sideloaded(app, ds):
             findings.insert(0, Finding(Category.HINWEIS, 0, "Bekannter Messenger, aber ausserhalb eines Stores installiert - Echtheit pruefen.", f"installer={app.installer or 'null'}"))
         return Priority.BEKANNTER_MESSENGER
 
-    # 3) Schwellen. Chatfunktion treibt die Prioritaet nur zusammen mit unsicherer
-    #    Herkunft - eine Chat-Bibliothek in einer Store-App ist nicht verdaechtig.
+    # 3) Funktions-/Tarnhinweise gelten unabhaengig von Installer und Signierer.
     if herkunft >= T_HERKUNFT and (chat >= T_CHAT or verschl >= T_VERSCHLEIERUNG):
         return Priority.UNBEDINGT_PRUEFEN
-    if verschl >= T_VERSCHLEIERUNG_HOCH and _has_network(app):
+    if verschl >= T_VERSCHLEIERUNG_HOCH and chat >= T_CHAT:
         return Priority.UNBEDINGT_PRUEFEN
     if herkunft >= T_HERKUNFT:
         return Priority.PRUEFEN_EMPFOHLEN
-    if chat >= T_CHAT and herkunft >= 20:
+    if chat >= T_CHAT and herkunft >= 20 and _has_chat(app):
         return Priority.PRUEFEN_EMPFOHLEN
     if verschl >= T_VERSCHLEIERUNG:
         return Priority.PRUEFEN_EMPFOHLEN
 
+    if app.apk is None or app.apk.error:
+        return Priority.NICHT_BEURTEILBAR
     return Priority.UNAUFFAELLIG
 
 
@@ -391,12 +387,10 @@ def _priority(app: AppInfo, ds: Datasets, findings: list[Finding], is_messenger:
 
 
 def _preload_like(app: AppInfo) -> bool:
-    """Vom System eingespielt: weder Installer noch Ausloeser, Feld aber vorhanden.
+    """Fehlende Herkunftsdaten; das beweist keine Vorinstallation.
 
-    Ab Android 11 schreibt Android bei jeder Installation den Ausloeser mit
-    (adb -> com.android.shell, Datei -> Paketinstaller, Store -> Store-Paket).
-    Ist er leer, hat das System die App selbst installiert (Vorinstallation).
-    Bei aelteren Versionen fehlt das Feld - dann ist das nicht unterscheidbar.
+    Die Herkunft bleibt unbekannt. Negative Store-Treffer und ein fehlender
+    Launcher werden ohne belastbaren Kontext nicht zu harten Befunden kombiniert.
     """
     return (
         not app.is_system
@@ -412,12 +406,11 @@ def _has_chat(app: AppInfo) -> bool:
         return False
     from .apk.indicators import REALTIME_LIBS
 
+    realtime = any(l in REALTIME_LIBS for l in apk.libraries) or bool(apk.protocol_signatures)
+    # Eine Bibliothek, URL oder INTERNET allein erklaert keine Tarnung.
     return bool(
-        [l for l in apk.libraries if l in REALTIME_LIBS]
-        or apk.protocol_signatures
-        or "remoteMessaging" in apk.fg_service_types
-        or apk.endpoints
-        or apk.chat_terms
+        (apk.chat_terms and (realtime or apk.endpoints or "remoteMessaging" in apk.fg_service_types))
+        or (realtime and apk.endpoints and "remoteMessaging" in apk.fg_service_types)
     )
 
 
@@ -439,7 +432,7 @@ def _perm_combo(app: AppInfo) -> bool:
 
 
 def _sideloaded(app: AppInfo, ds: Datasets) -> bool:
-    if app.is_system or app.oem_signed or _preload_like(app):
+    if app.is_system:
         return False
     installer = app.installer or app.initiating_installer
     if not installer:
