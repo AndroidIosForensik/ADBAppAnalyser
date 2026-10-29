@@ -82,10 +82,8 @@ class Collector:
     ) -> dict[str, AppInfo]:
         """Baut die AppInfo-Basis aus dumpsys package packages plus pm-Listen.
 
-        ``trust_oem_signature``: Bei Geraeten mit ``release-keys`` gilt eine
-        Drittanbieter-App, die wie eine System-App signiert ist, als Hersteller-
-        Vorinstallation. Bei ``test-keys`` (Custom-ROM, Emulator) ist der
-        Plattformschluessel oeffentlich - dann wird dieser Signatur nicht vertraut.
+        ``trust_oem_signature`` bleibt fuer bestehende Aufrufer erhalten.
+        Kurze Signaturwerte begruenden jedoch auf keinem Build Vertrauen.
         """
         res = self.shell("pakete_dumpsys", ["dumpsys", "package", "packages"], timeout=180)
         blocks = dumpsys_package.parse(res.text)
@@ -124,11 +122,7 @@ class Collector:
                 app.only_kept_data = True
             apps[pkg] = app
 
-        # Hersteller-Vorinstallationen erkennen: Drittanbieter-App mit derselben
-        # Signatur wie eine System-App (Xiaomi/Oppo/Samsung spielen viele Apps so
-        # vor, oft mit installer=null). Diese Signatur kann ein Dritter nicht faelschen.
-        if trust_oem_signature:
-            mark_oem_signed(apps, blocks)
+        mark_oem_signed(apps, blocks)
 
         count = len(apps)
         self.rec.add_status("pakete", OK if count else LEER, count, "Paketdaten, keine App-Daten.")
@@ -256,11 +250,9 @@ def run_scan(
     device = phase("Geraeteinformationen", "geraet", col.device_info) or DeviceInfo(serial=serial)
     device.profiles = phase("Profile", "profile", col.profiles) or []
 
-    # Bei test-keys (Custom-ROM/Emulator) ist der Plattformschluessel oeffentlich.
-    trust_oem = "test-keys" not in (device.build_tags or "")
     apps = phase(
         "Installierte Pakete", "pakete",
-        lambda: col.collect_packages(device.profiles, trust_oem_signature=trust_oem),
+        lambda: col.collect_packages(device.profiles),
     ) or {}
     phase("Launcher", "launcher", lambda: col.collect_launchers(apps, device.profiles))
     phase("Sonderzugriffe", "sonderzugriffe", lambda: col.collect_special_access(apps))
@@ -271,16 +263,24 @@ def run_scan(
     # APKs sichern und statisch analysieren (Nicht-System bzw. alle mit --all-apks).
     if options.pull_apk:
         targets = [a for a in app_list if options.all_apks or _wants_apk(a)]
+        successful = 0
         for i, app in enumerate(targets, 1):
             progress(f"APK-Analyse {i}/{len(targets)}: {app.package}")
             try:
                 local = col.pull_apk(app, apk_dir)
                 if local:
                     app.apk = analyzer.analyze(local)
+                    if not app.apk.error:
+                        successful += 1
+                    else:
+                        recorder.add_hint("apk", app.package, app.apk.error)
+                else:
+                    recorder.add_hint("apk", app.package, "APK konnte nicht gesichert werden.")
                 col.collect_appops(app)
             except Exception as exc:  # pragma: no cover - defensiv
                 recorder.add_hint("apk", app.package, f"APK-Analyse fehlgeschlagen: {exc}")
-        recorder.add_status("apk_analyse", OK, len(targets), "APK-Metadaten und Code-Strings.")
+        recorder.add_status("apk_analyse", OK if successful == len(targets) else TEILWEISE,
+                            successful, f"{successful}/{len(targets)} APK-Analysen ohne gemeldeten Fehler.")
 
     # Reputationsabgleich (Play/F-Droid/IOC; VT nur fuer Kandidaten). Ein Fehler
     # bei einer einzelnen App (z. B. Netzproblem) darf den Scan nie abbrechen.
@@ -308,11 +308,9 @@ def run_scan(
 
 
 def mark_oem_signed(apps: dict[str, AppInfo], blocks: dict) -> None:
-    """Markiert Nicht-System-Apps, die wie eine System-App signiert sind."""
-    system_sigs = {b.signature_hash for b in blocks.values() if b.is_system and b.signature_hash}
+    """Legacy-Schnittstelle: Kurzhashes belegen keine Herstellersignatur."""
     for app in apps.values():
-        if not app.is_system and app.signature_hash and app.signature_hash in system_sigs:
-            app.oem_signed = True
+        app.oem_signed = False
 
 
 def _wants_apk(app: AppInfo) -> bool:

@@ -59,7 +59,7 @@ def test_parser_liest_install_reason_und_ausloeser():
 # -- Signaturvergleich ----------------------------------------------------
 
 
-def test_herstellersignatur_wird_erkannt():
+def test_signatur_kurzwert_begruendet_keine_herstellersignatur():
     text = (
         "Packages:\n"
         "  Package [android] (1):\n"
@@ -79,16 +79,17 @@ def test_herstellersignatur_wird_erkannt():
         "de.fremd.app": AppInfo(package="de.fremd.app", signature_hash="deadbeef"),
     }
     mark_oem_signed(apps, blocks)
-    assert apps["com.miui.cleaner"].oem_signed is True
+    assert apps["com.miui.cleaner"].oem_signed is False
     assert apps["de.fremd.app"].oem_signed is False
 
 
-def test_herstellersignierte_app_unauffaellig():
+def test_legacy_herstellerflag_ueberstimmt_keine_herkunft():
     app = _app(oem_signed=True, signature_hash="b2d95fc0")
     score_app(app)
     assert app.priority == Priority.UNAUFFAELLIG
-    assert app.scores["herkunft"] == 0
-    assert "Vom Hersteller signiert" in texte(app)
+    assert app.scores["herkunft"] == 5
+    assert "kein kryptografischer Identitaetsnachweis" in texte(app)
+    assert "Vom Hersteller signiert" not in texte(app)
 
 
 # -- Partner-Vorinstallation (fremd signiert, installer=null) ------------
@@ -146,10 +147,10 @@ def test_deaktivierte_app_ohne_launcher_ist_keine_tarnung():
     assert "komplett deaktiviert" in texte(app)
 
 
-def test_vorinstallierter_messenger_ohne_echtheitswarnung():
+def test_messenger_ohne_installquelle_bekommt_echtheitshinweis():
     app = _app(package="com.facebook.orca",
                apk=ApkAnalysis(label="Messenger", has_launcher=True),
                launcher_activities=["com.facebook.orca/.Main"])
     score_app(app)
     assert app.priority == Priority.BEKANNTER_MESSENGER
-    assert "Echtheit" not in texte(app)
+    assert "Echtheit" in texte(app)

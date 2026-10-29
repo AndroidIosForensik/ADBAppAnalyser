@@ -115,7 +115,7 @@ def _write_html(out_dir: Path, device: DeviceInfo, apps: list[AppInfo], meta: di
 
     env = Environment(
         loader=FileSystemLoader(TEMPLATE_DIR),
-        autoescape=select_autoescape(["html", "xml"]),
+        autoescape=select_autoescape(["html", "xml", "j2"]),
     )
     env.filters["bytes_h"] = _human_bytes
     env.globals["secure_plan"] = acquisition_plan

@@ -44,6 +44,7 @@
   .p2 { background:var(--p2-bg); color:var(--p2-fg); border-color:var(--p2-line); }
   .p1 { background:var(--p1-bg); color:var(--p1-fg); border-color:var(--p1-line); }
   .p0 { background:var(--p0-bg); color:var(--p0-fg); border-color:var(--p0-line); }
+  .p4 { background:var(--p2-bg); color:var(--p2-fg); border-color:var(--p2-line); }
   .toolbar { position:sticky; top:0; background:var(--bg); padding:10px 0; z-index:5;
     display:flex; flex-wrap:wrap; gap:8px; align-items:center; border-bottom:1px solid var(--line); }
   input[type=search]{ flex:1; min-width:180px; padding:8px 10px; border:1px solid var(--line);
@@ -104,6 +105,7 @@
   </div>
   <div class="sub">Erstellt: {{ generated }} · Online-Abgleich:
     {{ "an" if meta.online else "aus (offline)" }} · Geraetezeit: {{ device.device_time }}</div>
+  {% if meta.umfang %}<div class="note">Untersuchungsumfang: {{ meta.umfang }}</div>{% endif %}
 
   <div class="grid">
     <div class="kv"><div class="k">Apps gesamt</div><div class="v">{{ apps|length }}</div></div>
@@ -116,6 +118,7 @@
     <span class="pill p2">Pruefen empfohlen: {{ buckets[Priority.PRUEFEN_EMPFOHLEN]|length }}</span>
     <span class="pill p1">Bekannte Messenger: {{ buckets[Priority.BEKANNTER_MESSENGER]|length }}</span>
     <span class="pill p0">Unauffaellig: {{ buckets[Priority.UNAUFFAELLIG]|length }}</span>
+    <span class="pill p4">Nicht beurteilbar: {{ buckets[Priority.NICHT_BEURTEILBAR]|length }}</span>
   </div>
 
   <div class="sub" style="margin:8px 0 4px; max-width:820px">
@@ -123,8 +126,8 @@
     stammt – Store, seitlich geladen, Zertifikat), <b>Chat</b> = Chat-/Netzwerk&shy;funktion
     (WebSocket, Server-Endpunkte, Push, Verschluesselung), <b>Verschl.</b> =
     Verschleierung/Tarnung (harmloser Name, versteckt, obfuskiert).
-    Hoehere Werte bedeuten verdaechtiger; die Einstufung ergibt sich aus der
-    Kombination (Details je App unten).
+    Die Werte sind Pruefhinweise, kein Nachweis einer Chatfunktion. Ein bekannter
+    Installer oder gleicher Signatur-Kurzwert begruendet keine Entwarnung.
   </div>
 
   <div class="toolbar">
@@ -133,6 +136,7 @@
       <label><input type="checkbox" class="pf" value="p3" checked> Unbedingt</label>
       <label><input type="checkbox" class="pf" value="p2" checked> Empfohlen</label>
       <label><input type="checkbox" class="pf" value="p1" checked> Messenger</label>
+      <label><input type="checkbox" class="pf" value="p4" checked> Nicht beurteilbar</label>
       <label><input type="checkbox" class="pf" value="p0"> Unauffaellig</label>
     </div>
   </div>
@@ -141,6 +145,7 @@
     {%- if app.priority == Priority.UNBEDINGT_PRUEFEN -%}p3
     {%- elif app.priority == Priority.PRUEFEN_EMPFOHLEN -%}p2
     {%- elif app.priority == Priority.BEKANNTER_MESSENGER -%}p1
+    {%- elif app.priority == Priority.NICHT_BEURTEILBAR -%}p4
     {%- else -%}p0{%- endif -%}
   {%- endmacro %}
 
@@ -160,6 +165,7 @@
       </span>
     </summary>
     <div class="body">
+      {% if app.apk and app.apk.error %}<div class="note">APK-Analyse unvollstaendig: {{ app.apk.error }}</div>{% endif %}
       {% if app.findings %}
       <div class="findings">
         {% for f in app.findings %}
@@ -278,6 +284,7 @@
   {% else %}<div class="empty">Keine bekannten Messenger gefunden.</div>{% endif %}
 
   <h2 id="alle">Alle uebrigen Apps</h2>
+  {% for app in buckets[Priority.NICHT_BEURTEILBAR] %}{{ app_card(app) }}{% endfor %}
   {% for app in buckets[Priority.UNAUFFAELLIG] %}{{ app_card(app) }}{% endfor %}
 
   <h2 id="methodik">Methodik &amp; Grenzen</h2>
